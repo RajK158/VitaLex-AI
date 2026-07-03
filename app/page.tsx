@@ -4,6 +4,7 @@ import { Features } from "@/components/features"
 import { ImpactDashboard } from "@/components/impact-dashboard"
 import { RuleExport } from "@/components/rule-export"
 import { Testimonials } from "@/components/testimonials"
+import { FinalCta } from "@/components/final-cta"
 import { SiteFooter } from "@/components/site-footer"
 
 export default function Page() {
@@ -16,6 +17,7 @@ export default function Page() {
         <ImpactDashboard />
         <RuleExport />
         <Testimonials />
+        <FinalCta />
       </main>
       <SiteFooter />
     </div>
