@@ -25,6 +25,7 @@ export default function DashboardPage() {
   const [documents, setDocuments] = useState<DocumentRow[]>([])
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState("")
+  const [summaryDoc, setSummaryDoc] = useState<DocumentRow | null>(null)
 
   async function fetchDocuments() {
     const { data, error } = await supabase
@@ -64,6 +65,17 @@ export default function DashboardPage() {
   useEffect(() => {
     fetchDocuments()
   }, [])
+
+  useEffect(() => {
+    if (!summaryDoc) return
+
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") setSummaryDoc(null)
+    }
+
+    window.addEventListener("keydown", handleKeyDown)
+    return () => window.removeEventListener("keydown", handleKeyDown)
+  }, [summaryDoc])
 
   async function handleUpload() {
     if (!file) {
@@ -238,25 +250,27 @@ export default function DashboardPage() {
                   </div>
 
                   <div className="flex items-center gap-2">
-                    <button
+                    {doc.status === "summarized" ? (
+                      <button
+                        onClick={() => setSummaryDoc(doc)}
+                        className="rounded-full bg-white px-4 py-2 text-xs font-semibold text-black transition hover:bg-zinc-200"
+                      >
+                        View Summary
+                      </button>
+                    ) : (
+                      <button
                         onClick={() => generateSummary(doc.id)}
-                        disabled={loading || doc.status === "summarized"}
+                        disabled={loading}
                         className="rounded-full bg-white px-4 py-2 text-xs font-semibold text-black transition hover:bg-zinc-200 disabled:opacity-50"
-                    >
-                        {doc.status === "summarized" ? "Summarized" : "Generate Summary"}
-                    </button>
+                      >
+                        Generate Summary
+                      </button>
+                    )}
 
                     <span className="w-fit rounded-full bg-zinc-800 px-3 py-1 text-xs text-zinc-300">
                         {doc.status}
                     </span>
                     </div>
-                    {doc.summary && (
-                        <div className="mt-4 rounded-xl border border-zinc-800 bg-black p-4">
-                            <p className="whitespace-pre-line text-sm leading-6 text-zinc-300">
-                            {doc.summary}
-                            </p>
-                        </div>
-                        )}
                 </div>
               </div>
             ))}
@@ -269,6 +283,44 @@ export default function DashboardPage() {
           </div>
         </section>
       </div>
+
+      {summaryDoc && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4"
+          onClick={() => setSummaryDoc(null)}
+        >
+          <div
+            className="max-h-[80vh] w-full max-w-2xl overflow-y-auto rounded-2xl border border-zinc-800 bg-zinc-950 p-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h3 className="font-semibold text-white">
+                  {summaryDoc.file_name}
+                </h3>
+                <p className="mt-1 text-sm text-zinc-400">
+                  {summaryDoc.document_type || "Unknown type"} •{" "}
+                  {summaryDoc.payer || "No payer"} •{" "}
+                  {summaryDoc.department || "No department"}
+                </p>
+              </div>
+              <button
+                onClick={() => setSummaryDoc(null)}
+                aria-label="Close summary"
+                className="shrink-0 rounded-full border border-zinc-800 px-3 py-1 text-sm text-zinc-300 transition hover:bg-zinc-800"
+              >
+                Close
+              </button>
+            </div>
+
+            <div className="mt-5 rounded-xl border border-zinc-800 bg-black p-4">
+              <p className="whitespace-pre-line text-sm leading-6 text-zinc-300">
+                {summaryDoc.summary}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   )
 }
