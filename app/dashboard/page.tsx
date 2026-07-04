@@ -156,6 +156,7 @@ export default function DashboardPage() {
   const [searchQuery, setSearchQuery] = useState("")
   const [typeFilter, setTypeFilter] = useState("All Types")
   const [statusFilter, setStatusFilter] = useState("All Statuses")
+  const [approvalFilter, setApprovalFilter] = useState("All Approval Statuses")
   const [comparisonsCount, setComparisonsCount] = useState(0)
   const [auditLogs, setAuditLogs] = useState<AuditLogRow[]>([])
 
@@ -391,6 +392,7 @@ export default function DashboardPage() {
     setSearchQuery("")
     setTypeFilter("All Types")
     setStatusFilter("All Statuses")
+    setApprovalFilter("All Approval Statuses")
   }
 
   const filteredDocuments = documents.filter((doc) => {
@@ -407,7 +409,11 @@ export default function DashboardPage() {
     const matchesStatus =
       statusFilter === "All Statuses" || doc.status === statusFilter
 
-    return matchesQuery && matchesType && matchesStatus
+    const matchesApproval =
+      approvalFilter === "All Approval Statuses" ||
+      (doc.approval_status || "draft") === approvalFilter
+
+    return matchesQuery && matchesType && matchesStatus && matchesApproval
   })
 
   const allGeneratedRules = Object.values(rulesByDocument).flat()
@@ -654,7 +660,7 @@ export default function DashboardPage() {
             </p>
           </div>
 
-          <div className="mb-6 grid gap-3 rounded-2xl border border-zinc-800 bg-zinc-950 p-4 md:grid-cols-4">
+          <div className="mb-6 grid gap-3 rounded-2xl border border-zinc-800 bg-zinc-950 p-4 md:grid-cols-5">
             <div className="md:col-span-2">
               <label className="mb-2 block text-sm text-zinc-300">
                 Search
@@ -702,9 +708,26 @@ export default function DashboardPage() {
               </select>
             </div>
 
+            <div>
+              <label className="mb-2 block text-sm text-zinc-300">
+                Approval status
+              </label>
+              <select
+                value={approvalFilter}
+                onChange={(e) => setApprovalFilter(e.target.value)}
+                className="w-full rounded-xl border border-zinc-800 bg-black p-3 text-sm text-zinc-300"
+              >
+                <option>All Approval Statuses</option>
+                <option value="draft">Draft</option>
+                <option value="in_review">In Review</option>
+                <option value="approved">Approved</option>
+                <option value="published">Published</option>
+              </select>
+            </div>
+
             <button
               onClick={clearFilters}
-              className="rounded-xl border border-zinc-800 px-4 py-3 text-sm font-semibold text-zinc-300 transition hover:bg-zinc-800 md:col-span-4 md:w-fit"
+              className="rounded-xl border border-zinc-800 px-4 py-3 text-sm font-semibold text-zinc-300 transition hover:bg-zinc-800 md:col-span-5 md:w-fit"
             >
               Clear Filters
             </button>
