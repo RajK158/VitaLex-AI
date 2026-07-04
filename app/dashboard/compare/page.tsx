@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { supabase } from "@/lib/supabase"
 
@@ -61,12 +62,34 @@ function ListCard({ title, items }: { title: string; items: string[] }) {
 }
 
 export default function ComparePage() {
+  const router = useRouter()
+  const [authChecked, setAuthChecked] = useState(false)
   const [documents, setDocuments] = useState<DocumentRow[]>([])
   const [oldDocumentId, setOldDocumentId] = useState("")
   const [newDocumentId, setNewDocumentId] = useState("")
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState("")
   const [comparison, setComparison] = useState<ComparisonResult | null>(null)
+
+  useEffect(() => {
+    async function checkAuth() {
+      const { data } = await supabase.auth.getSession()
+
+      if (!data.session) {
+        router.push("/login")
+        return
+      }
+
+      setAuthChecked(true)
+    }
+
+    checkAuth()
+  }, [router])
+
+  async function handleLogout() {
+    await supabase.auth.signOut()
+    router.push("/login")
+  }
 
   useEffect(() => {
     async function fetchDocuments() {
@@ -138,15 +161,31 @@ export default function ComparePage() {
     }
   }
 
+  if (!authChecked) {
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-black text-white">
+        <p className="text-zinc-400">Checking authentication...</p>
+      </main>
+    )
+  }
+
   return (
     <main className="min-h-screen bg-black px-6 py-10 text-white">
       <div className="mx-auto max-w-4xl">
-        <Link
-          href="/dashboard"
-          className="text-sm text-zinc-400 transition hover:text-white"
-        >
-          ← Back to Dashboard
-        </Link>
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <Link
+            href="/dashboard"
+            className="text-sm text-zinc-400 transition hover:text-white"
+          >
+            ← Back to Dashboard
+          </Link>
+          <button
+            onClick={handleLogout}
+            className="rounded-full border border-zinc-800 px-4 py-2 text-xs font-semibold text-zinc-300 transition hover:bg-zinc-800"
+          >
+            Logout
+          </button>
+        </div>
 
         <div className="mt-6">
           <p className="text-sm font-medium uppercase tracking-wider text-zinc-400">

@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { useParams } from "next/navigation"
+import { useParams, useRouter } from "next/navigation"
 import Link from "next/link"
 import { supabase } from "@/lib/supabase"
 
@@ -90,8 +90,10 @@ function downloadRulesExportFile(
 
 export default function DocumentDetailPage() {
   const params = useParams<{ id: string }>()
+  const router = useRouter()
   const id = params?.id
 
+  const [authChecked, setAuthChecked] = useState(false)
   const [doc, setDoc] = useState<DocumentRow | null>(null)
   const [rules, setRules] = useState<GeneratedRule[]>([])
   const [loading, setLoading] = useState(true)
@@ -184,6 +186,26 @@ export default function DocumentDetailPage() {
   }
 
   useEffect(() => {
+    async function checkAuth() {
+      const { data } = await supabase.auth.getSession()
+
+      if (!data.session) {
+        router.push("/login")
+        return
+      }
+
+      setAuthChecked(true)
+    }
+
+    checkAuth()
+  }, [router])
+
+  async function handleLogout() {
+    await supabase.auth.signOut()
+    router.push("/login")
+  }
+
+  useEffect(() => {
     if (!id) return
 
     async function fetchDocument() {
@@ -230,15 +252,31 @@ export default function DocumentDetailPage() {
     fetchDocument()
   }, [id])
 
+  if (!authChecked) {
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-black text-white">
+        <p className="text-zinc-400">Checking authentication...</p>
+      </main>
+    )
+  }
+
   return (
     <main className="min-h-screen bg-black px-6 py-10 text-white">
       <div className="mx-auto max-w-4xl">
-        <Link
-          href="/dashboard"
-          className="text-sm text-zinc-400 transition hover:text-white"
-        >
-          ← Back to Dashboard
-        </Link>
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <Link
+            href="/dashboard"
+            className="text-sm text-zinc-400 transition hover:text-white"
+          >
+            ← Back to Dashboard
+          </Link>
+          <button
+            onClick={handleLogout}
+            className="rounded-full border border-zinc-800 px-4 py-2 text-xs font-semibold text-zinc-300 transition hover:bg-zinc-800"
+          >
+            Logout
+          </button>
+        </div>
 
         {loading && (
           <p className="mt-8 text-zinc-400">Loading document...</p>

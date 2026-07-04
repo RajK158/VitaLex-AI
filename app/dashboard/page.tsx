@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { X } from "lucide-react"
 import { supabase } from "@/lib/supabase"
@@ -156,6 +157,8 @@ function downloadRulesExportFile(
 }
 
 export default function DashboardPage() {
+  const router = useRouter()
+  const [authChecked, setAuthChecked] = useState(false)
   const [file, setFile] = useState<File | null>(null)
   const [documentType, setDocumentType] = useState("Billing Policy")
   const [payer, setPayer] = useState("")
@@ -388,6 +391,26 @@ export default function DashboardPage() {
     }
   }
   useEffect(() => {
+    async function checkAuth() {
+      const { data } = await supabase.auth.getSession()
+
+      if (!data.session) {
+        router.push("/login")
+        return
+      }
+
+      setAuthChecked(true)
+    }
+
+    checkAuth()
+  }, [router])
+
+  async function handleLogout() {
+    await supabase.auth.signOut()
+    router.push("/login")
+  }
+
+  useEffect(() => {
     fetchDocuments()
     fetchRules()
     fetchComparisonsCount()
@@ -526,6 +549,14 @@ export default function DashboardPage() {
     }
   }
 
+  if (!authChecked) {
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-black text-white">
+        <p className="text-zinc-400">Checking authentication...</p>
+      </main>
+    )
+  }
+
   return (
     <main className="min-h-screen bg-black px-6 py-10 text-white">
       <div className="mx-auto max-w-6xl">
@@ -534,12 +565,20 @@ export default function DashboardPage() {
             <p className="text-sm font-medium uppercase tracking-wider text-zinc-400">
               VitaLex Dashboard
             </p>
-            <Link
-              href="/dashboard/compare"
-              className="rounded-full border border-zinc-700 px-4 py-2 text-xs font-semibold text-zinc-200 transition hover:bg-zinc-800"
-            >
-              Compare Documents
-            </Link>
+            <div className="flex items-center gap-2">
+              <Link
+                href="/dashboard/compare"
+                className="rounded-full border border-zinc-700 px-4 py-2 text-xs font-semibold text-zinc-200 transition hover:bg-zinc-800"
+              >
+                Compare Documents
+              </Link>
+              <button
+                onClick={handleLogout}
+                className="rounded-full border border-zinc-800 px-4 py-2 text-xs font-semibold text-zinc-300 transition hover:bg-zinc-800"
+              >
+                Logout
+              </button>
+            </div>
           </div>
           <h1 className="mt-3 text-4xl font-bold tracking-tight">
             Upload healthcare policy documents
