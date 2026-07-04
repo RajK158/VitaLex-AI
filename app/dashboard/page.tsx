@@ -97,6 +97,7 @@ export default function DashboardPage() {
   const [searchQuery, setSearchQuery] = useState("")
   const [typeFilter, setTypeFilter] = useState("All Types")
   const [statusFilter, setStatusFilter] = useState("All Statuses")
+  const [comparisonsCount, setComparisonsCount] = useState(0)
 
   async function fetchDocuments() {
     const { data, error } = await supabase
@@ -110,6 +111,18 @@ export default function DashboardPage() {
     }
 
     setDocuments(data || [])
+  }
+
+  async function fetchComparisonsCount() {
+    const { count, error } = await supabase
+      .from("vitalex_comparisons")
+      .select("*", { count: "exact", head: true })
+
+    if (error) {
+      return
+    }
+
+    setComparisonsCount(count || 0)
   }
 
   async function fetchRules() {
@@ -267,6 +280,7 @@ export default function DashboardPage() {
   useEffect(() => {
     fetchDocuments()
     fetchRules()
+    fetchComparisonsCount()
   }, [])
 
   useEffect(() => {
@@ -305,6 +319,35 @@ export default function DashboardPage() {
 
     return matchesQuery && matchesType && matchesStatus
   })
+
+  const allGeneratedRules = Object.values(rulesByDocument).flat()
+
+  const dashboardMetrics = [
+    {
+      label: "Documents Uploaded",
+      value: documents.length,
+    },
+    {
+      label: "Summaries Generated",
+      value: documents.filter(
+        (doc) => Boolean(doc.summary) || doc.status === "summarized"
+      ).length,
+    },
+    {
+      label: "Rules Generated",
+      value: allGeneratedRules.length,
+    },
+    {
+      label: "High-Risk Rules",
+      value: allGeneratedRules.filter(
+        (rule) => rule.risk_level?.toLowerCase() === "high"
+      ).length,
+    },
+    {
+      label: "Comparisons Run",
+      value: comparisonsCount,
+    },
+  ]
 
   async function handleUpload() {
     if (!file) {
@@ -391,6 +434,20 @@ export default function DashboardPage() {
             rule generation.
           </p>
         </div>
+
+        <section className="mb-10 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+          {dashboardMetrics.map((metric) => (
+            <div
+              key={metric.label}
+              className="rounded-2xl border border-zinc-800 bg-zinc-950 p-4"
+            >
+              <p className="text-2xl font-bold tracking-tight text-white">
+                {metric.value}
+              </p>
+              <p className="mt-1 text-xs text-zinc-400">{metric.label}</p>
+            </div>
+          ))}
+        </section>
 
         <section className="mb-10 rounded-3xl border border-zinc-800 bg-zinc-950 p-6">
           <div className="grid gap-4 md:grid-cols-2">
