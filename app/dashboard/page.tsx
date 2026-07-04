@@ -79,6 +79,21 @@ const auditExportFormatLabels: Record<string, string> = {
 
 const RECENT_ACTIVITY_PREVIEW_COUNT = 2
 
+type UserProfile = {
+  id: string
+  email: string | null
+  role: string
+}
+
+const roleLabels: Record<string, string> = {
+  admin: "Admin",
+  compliance: "Compliance",
+  billing_coding: "Billing/Coding",
+  analyst: "Analyst",
+  developer: "Developer",
+  viewer: "Viewer",
+}
+
 function formatAuditMetadata(metadata: Record<string, unknown> | null) {
   if (!metadata) return null
 
@@ -182,6 +197,7 @@ export default function DashboardPage() {
   const [comparisonsCount, setComparisonsCount] = useState(0)
   const [auditLogs, setAuditLogs] = useState<AuditLogRow[]>([])
   const [showAllActivity, setShowAllActivity] = useState(false)
+  const [profile, setProfile] = useState<UserProfile | null>(null)
 
   async function getAccessToken() {
     const { data } = await supabase.auth.getSession()
@@ -457,6 +473,37 @@ export default function DashboardPage() {
       setLoading(false)
     }
   }
+  async function fetchOrCreateProfile(userId: string, email: string | null) {
+    const { data: existingProfile, error: fetchError } = await supabase
+      .from("vitalex_profiles")
+      .select("*")
+      .eq("id", userId)
+      .maybeSingle()
+
+    if (fetchError) {
+      console.error("Profile fetch error:", fetchError)
+      return
+    }
+
+    if (existingProfile) {
+      setProfile(existingProfile)
+      return
+    }
+
+    const { data: newProfile, error: insertError } = await supabase
+      .from("vitalex_profiles")
+      .insert({ id: userId, email, role: "admin" })
+      .select()
+      .single()
+
+    if (insertError) {
+      console.error("Profile create error:", insertError)
+      return
+    }
+
+    setProfile(newProfile)
+  }
+
   useEffect(() => {
     async function checkAuth() {
       const { data } = await supabase.auth.getSession()
@@ -465,6 +512,11 @@ export default function DashboardPage() {
         router.push("/login")
         return
       }
+
+      await fetchOrCreateProfile(
+        data.session.user.id,
+        data.session.user.email ?? null
+      )
 
       setAuthChecked(true)
     }
@@ -647,6 +699,11 @@ export default function DashboardPage() {
               VitaLex Dashboard
             </p>
             <div className="flex items-center gap-2">
+              {profile && (
+                <span className="rounded-full border border-zinc-800 px-4 py-2 text-xs font-semibold text-zinc-300">
+                  Role: {roleLabels[profile.role] || profile.role}
+                </span>
+              )}
               <Link
                 href="/dashboard/compare"
                 className="rounded-full border border-zinc-700 px-4 py-2 text-xs font-semibold text-zinc-200 transition hover:bg-zinc-800"

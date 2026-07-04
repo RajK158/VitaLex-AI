@@ -14,6 +14,22 @@ export default function LoginPage() {
   const [googleLoading, setGoogleLoading] = useState(false)
   const [message, setMessage] = useState("")
 
+  async function ensureUserProfile(user: { id: string; email: string | null }) {
+    const { data: existingProfile } = await supabase
+      .from("vitalex_profiles")
+      .select("id")
+      .eq("id", user.id)
+      .maybeSingle()
+
+    if (existingProfile) return
+
+    await supabase.from("vitalex_profiles").insert({
+      id: user.id,
+      email: user.email,
+      role: "admin",
+    })
+  }
+
   async function handleLogin() {
     if (!email || !password) {
       setMessage("Please enter your email and password.")
@@ -24,7 +40,7 @@ export default function LoginPage() {
       setLoading(true)
       setMessage("")
 
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       })
@@ -32,6 +48,13 @@ export default function LoginPage() {
       if (error) {
         setMessage(error.message)
         return
+      }
+
+      if (data.user) {
+        await ensureUserProfile({
+          id: data.user.id,
+          email: data.user.email ?? email,
+        })
       }
 
       router.push("/dashboard")
