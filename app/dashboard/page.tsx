@@ -183,10 +183,33 @@ export default function DashboardPage() {
   const [auditLogs, setAuditLogs] = useState<AuditLogRow[]>([])
   const [showAllActivity, setShowAllActivity] = useState(false)
 
+  async function getAccessToken() {
+    const { data } = await supabase.auth.getSession()
+    return data.session?.access_token || null
+  }
+
+  async function getCurrentUserId() {
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser()
+
+    if (userError || !user) {
+      router.push("/login")
+      return null
+    }
+
+    return user.id
+  }
+
   async function fetchDocuments() {
+    const userId = await getCurrentUserId()
+    if (!userId) return
+
     const { data, error } = await supabase
       .from("vitalex_documents")
       .select("*")
+      .eq("user_id", userId)
       .order("created_at", { ascending: false })
 
     if (error) {
@@ -198,9 +221,13 @@ export default function DashboardPage() {
   }
 
   async function fetchComparisonsCount() {
+    const userId = await getCurrentUserId()
+    if (!userId) return
+
     const { count, error } = await supabase
       .from("vitalex_comparisons")
       .select("*", { count: "exact", head: true })
+      .eq("user_id", userId)
 
     if (error) {
       setComparisonsCount(0)
@@ -215,6 +242,7 @@ export default function DashboardPage() {
     const { data: comparisonRows, error: fallbackError } = await supabase
       .from("vitalex_comparisons")
       .select("id")
+      .eq("user_id", userId)
 
     if (fallbackError) {
       setComparisonsCount(0)
@@ -225,9 +253,13 @@ export default function DashboardPage() {
   }
 
   async function fetchAuditLogs() {
+    const userId = await getCurrentUserId()
+    if (!userId) return
+
     const { data, error } = await supabase
       .from("vitalex_audit_logs")
       .select("*")
+      .eq("user_id", userId)
       .order("created_at", { ascending: false })
       .limit(5)
 
@@ -240,6 +272,23 @@ export default function DashboardPage() {
 
   async function fetchRules() {
     try {
+      const userId = await getCurrentUserId()
+      if (!userId) return
+
+      const { data: userDocuments, error: documentsError } = await supabase
+        .from("vitalex_documents")
+        .select("id")
+        .eq("user_id", userId)
+
+      if (documentsError) {
+        setMessage(documentsError.message)
+        return
+      }
+
+      const userDocumentIds = new Set(
+        (userDocuments || []).map((userDoc) => userDoc.id)
+      )
+
       const response = await fetch("/api/rules")
       const result = await response.json()
 
@@ -252,6 +301,7 @@ export default function DashboardPage() {
 
       for (const row of result.rules || []) {
         const docId = row.document_id as string
+        if (!userDocumentIds.has(docId)) continue
         if (!grouped[docId]) grouped[docId] = []
         grouped[docId].push(row.rule_json as GeneratedRule)
       }
@@ -266,9 +316,14 @@ export default function DashboardPage() {
     try {
       setLoading(true)
       setMessage("Generating summary...")
-  
+
+      const accessToken = await getAccessToken()
+
       const response = await fetch(`/api/documents/${id}/summarize`, {
         method: "POST",
+        headers: accessToken
+          ? { Authorization: `Bearer ${accessToken}` }
+          : undefined,
       })
   
       const result = await response.json()
@@ -290,8 +345,13 @@ export default function DashboardPage() {
       setLoading(true)
       setMessage("Generating rules...")
 
+      const accessToken = await getAccessToken()
+
       const response = await fetch(`/api/documents/${doc.id}/rules`, {
         method: "POST",
+        headers: accessToken
+          ? { Authorization: `Bearer ${accessToken}` }
+          : undefined,
       })
 
       const result = await response.json()
@@ -323,11 +383,18 @@ export default function DashboardPage() {
       setExportingFormat(format)
       setMessage(`Exporting ${ruleExportFormatLabels[format]}...`)
 
+      const accessToken = await getAccessToken()
+
       const response = await fetch(
         `/api/documents/${doc.id}/export-rules`,
         {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            ...(accessToken
+              ? { Authorization: `Bearer ${accessToken}` }
+              : {}),
+          },
           body: JSON.stringify({ exportFormat: format }),
         }
       )
@@ -509,8 +576,19 @@ export default function DashboardPage() {
       setLoading(true)
       setMessage("")
 
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser()
+
+      if (userError || !user) {
+        setMessage("You must be logged in to upload documents.")
+        router.push("/login")
+        return
+      }
+
       const safeFileName = file.name.replaceAll(" ", "_")
-      const filePath = `${Date.now()}-${safeFileName}`
+      const filePath = `${user.id}/${Date.now()}-${safeFileName}`
 
       const { error: uploadError } = await supabase.storage
         .from("documents")
@@ -521,18 +599,21 @@ export default function DashboardPage() {
         return
       }
 
+      const documentPayload = {
+        file_name: file.name,
+        file_path: filePath,
+        file_type: file.type,
+        file_size: file.size,
+        document_type: documentType,
+        payer: payer || null,
+        department: department || null,
+        status: "uploaded",
+        user_id: user.id,
+      }
+
       const { error: insertError } = await supabase
         .from("vitalex_documents")
-        .insert({
-          file_name: file.name,
-          file_path: filePath,
-          file_type: file.type,
-          file_size: file.size,
-          document_type: documentType,
-          payer: payer || null,
-          department: department || null,
-          status: "uploaded",
-        })
+        .insert(documentPayload)
 
       if (insertError) {
         setMessage(insertError.message)

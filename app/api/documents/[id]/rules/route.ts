@@ -12,6 +12,21 @@ const supabase = createClient(supabaseUrl, serviceRoleKey)
 const genAI = new GoogleGenAI({ apiKey: geminiApiKey })
 const GEMINI_MODEL = "gemini-3.5-flash"
 
+async function getUserIdFromRequest(request: Request): Promise<string | null> {
+  const authHeader = request.headers.get("authorization")
+  const accessToken = authHeader?.toLowerCase().startsWith("bearer ")
+    ? authHeader.slice(7)
+    : null
+
+  if (!accessToken) return null
+
+  const { data, error } = await supabase.auth.getUser(accessToken)
+
+  if (error || !data.user) return null
+
+  return data.user.id
+}
+
 type GeneratedRule = {
   rule_id: string
   title: string
@@ -53,6 +68,7 @@ export async function POST(
 ) {
   try {
     const { id } = await context.params
+    const userId = await getUserIdFromRequest(request)
 
     const { data: document, error: documentError } = await supabase
       .from("vitalex_documents")
@@ -138,6 +154,7 @@ ${limitedContent}`,
       document_id: document.id,
       rule_title: rule.title || rule.rule_id || "Generated Rule",
       rule_json: rule,
+      user_id: userId,
     }))
 
     const { error: insertError } = await supabase
@@ -158,6 +175,7 @@ ${limitedContent}`,
           action: "generated_rules",
           entity_type: "document",
           entity_id: document.id,
+          user_id: userId,
           metadata: { rule_count: rules.length },
         })
 

@@ -20,6 +20,21 @@ const supabase = createClient(supabaseUrl, serviceRoleKey)
 const genAI = new GoogleGenAI({ apiKey: geminiApiKey })
 const GEMINI_MODEL = "gemini-3.5-flash"
 
+async function getUserIdFromRequest(request: Request): Promise<string | null> {
+  const authHeader = request.headers.get("authorization")
+  const accessToken = authHeader?.toLowerCase().startsWith("bearer ")
+    ? authHeader.slice(7)
+    : null
+
+  if (!accessToken) return null
+
+  const { data, error } = await supabase.auth.getUser(accessToken)
+
+  if (error || !data.user) return null
+
+  return data.user.id
+}
+
 async function extractText(buffer: Buffer, fileType: string | null) {
   if (fileType === "text/plain") {
     return buffer.toString("utf-8")
@@ -47,6 +62,7 @@ export async function POST(
 ) {
   try {
     const { id } = await context.params
+    const userId = await getUserIdFromRequest(request)
 
     const { data: document, error: documentError } = await supabase
       .from("vitalex_documents")
@@ -144,6 +160,7 @@ ${limitedText}`,
           action: "generated_summary",
           entity_type: "document",
           entity_id: id,
+          user_id: userId,
           metadata: { file_name: document.file_name || null },
         })
 

@@ -93,9 +93,20 @@ export default function ComparePage() {
 
   useEffect(() => {
     async function fetchDocuments() {
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser()
+
+      if (userError || !user) {
+        router.push("/login")
+        return
+      }
+
       const { data, error } = await supabase
         .from("vitalex_documents")
         .select("*")
+        .eq("user_id", user.id)
         .order("created_at", { ascending: false })
 
       if (error) {
@@ -113,7 +124,7 @@ export default function ComparePage() {
     }
 
     fetchDocuments()
-  }, [])
+  }, [router])
 
   async function handleCompare() {
     if (!oldDocumentId || !newDocumentId) {

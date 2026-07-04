@@ -8,6 +8,21 @@ const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
 
 const supabase = createClient(supabaseUrl, serviceRoleKey)
 
+async function getUserIdFromRequest(request: Request): Promise<string | null> {
+  const authHeader = request.headers.get("authorization")
+  const accessToken = authHeader?.toLowerCase().startsWith("bearer ")
+    ? authHeader.slice(7)
+    : null
+
+  if (!accessToken) return null
+
+  const { data, error } = await supabase.auth.getUser(accessToken)
+
+  if (error || !data.user) return null
+
+  return data.user.id
+}
+
 const VALID_APPROVAL_STATUSES = [
   "draft",
   "in_review",
@@ -22,6 +37,7 @@ export async function PATCH(
 ) {
   try {
     const { id } = await context.params
+    const userId = await getUserIdFromRequest(request)
 
     const body = await request.json().catch(() => null)
     const approvalStatus = body?.approvalStatus
@@ -83,6 +99,7 @@ export async function PATCH(
           action: "updated_approval_status",
           entity_type: "document",
           entity_id: id,
+          user_id: userId,
           metadata: auditMetadata,
         })
 

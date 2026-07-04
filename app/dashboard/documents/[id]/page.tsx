@@ -212,10 +212,21 @@ export default function DocumentDetailPage() {
       setLoading(true)
       setMessage("")
 
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser()
+
+      if (userError || !user) {
+        router.push("/login")
+        return
+      }
+
       const { data: docData, error: docError } = await supabase
         .from("vitalex_documents")
         .select("*")
         .eq("id", id)
+        .eq("user_id", user.id)
         .single()
 
       if (docError || !docData) {
@@ -236,7 +247,9 @@ export default function DocumentDetailPage() {
         if (response.ok) {
           const documentRules = (result.rules || [])
             .filter(
-              (row: { document_id: string }) => row.document_id === id
+              (row: { document_id: string; user_id?: string | null }) =>
+                row.document_id === id &&
+                (row.user_id === undefined || row.user_id === user.id)
             )
             .map((row: { rule_json: GeneratedRule }) => row.rule_json)
 
@@ -250,7 +263,7 @@ export default function DocumentDetailPage() {
     }
 
     fetchDocument()
-  }, [id])
+  }, [id, router])
 
   if (!authChecked) {
     return (

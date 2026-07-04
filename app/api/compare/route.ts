@@ -12,6 +12,21 @@ const supabase = createClient(supabaseUrl, serviceRoleKey)
 const genAI = new GoogleGenAI({ apiKey: geminiApiKey })
 const GEMINI_MODEL = "gemini-3.5-flash"
 
+async function getUserIdFromRequest(request: Request): Promise<string | null> {
+  const authHeader = request.headers.get("authorization")
+  const accessToken = authHeader?.toLowerCase().startsWith("bearer ")
+    ? authHeader.slice(7)
+    : null
+
+  if (!accessToken) return null
+
+  const { data, error } = await supabase.auth.getUser(accessToken)
+
+  if (error || !data.user) return null
+
+  return data.user.id
+}
+
 type ComparisonResult = {
   summary: string
   added_content: string[]
@@ -67,6 +82,8 @@ function getDocumentContent(doc: DocumentWithContent) {
 
 export async function POST(request: Request) {
   try {
+    const userId = await getUserIdFromRequest(request)
+
     const body = await request.json().catch(() => null)
     const oldDocumentId = body?.oldDocumentId
     const newDocumentId = body?.newDocumentId
@@ -166,6 +183,7 @@ Return:
         old_document_id: oldDocumentId,
         new_document_id: newDocumentId,
         comparison_result: comparisonResult,
+        user_id: userId,
       })
       .select()
       .single()
@@ -184,6 +202,7 @@ Return:
           action: "compared_documents",
           entity_type: "comparison",
           entity_id: savedComparison.id,
+          user_id: userId,
           metadata: {
             old_document_id: oldDocumentId,
             new_document_id: newDocumentId,

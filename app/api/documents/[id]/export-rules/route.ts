@@ -12,6 +12,21 @@ const supabase = createClient(supabaseUrl, serviceRoleKey)
 const genAI = new GoogleGenAI({ apiKey: geminiApiKey })
 const GEMINI_MODEL = "gemini-3.5-flash"
 
+async function getUserIdFromRequest(request: Request): Promise<string | null> {
+  const authHeader = request.headers.get("authorization")
+  const accessToken = authHeader?.toLowerCase().startsWith("bearer ")
+    ? authHeader.slice(7)
+    : null
+
+  if (!accessToken) return null
+
+  const { data, error } = await supabase.auth.getUser(accessToken)
+
+  if (error || !data.user) return null
+
+  return data.user.id
+}
+
 const VALID_FORMATS = ["json", "pseudocode", "sql", "python"] as const
 type ExportFormat = (typeof VALID_FORMATS)[number]
 
@@ -41,6 +56,7 @@ export async function POST(
 ) {
   try {
     const { id } = await context.params
+    const userId = await getUserIdFromRequest(request)
 
     const body = await request.json().catch(() => null)
     const exportFormat = body?.exportFormat
@@ -119,6 +135,7 @@ ${JSON.stringify(rules, null, 2)}`,
           action: "exported_rules",
           entity_type: "document",
           entity_id: id,
+          user_id: userId,
           metadata: { export_format: exportFormat },
         })
 
