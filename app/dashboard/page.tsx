@@ -35,6 +35,60 @@ const riskBadgeStyles: Record<string, string> = {
   high: "border-red-500/40 text-red-400",
 }
 
+type AuditLogRow = {
+  id: string
+  action: string
+  entity_type: string | null
+  entity_id: string | null
+  metadata: Record<string, unknown> | null
+  created_at: string
+}
+
+const auditActionLabels: Record<string, string> = {
+  generated_summary: "Generated summary",
+  generated_rules: "Generated rules",
+  compared_documents: "Compared documents",
+  exported_rules: "Exported rules",
+  uploaded_document: "Uploaded document",
+  deleted_document: "Deleted document",
+}
+
+const auditExportFormatLabels: Record<string, string> = {
+  json: "JSON",
+  sql: "SQL",
+  python: "Python",
+  pseudocode: "Pseudocode",
+}
+
+function formatAuditMetadata(metadata: Record<string, unknown> | null) {
+  if (!metadata) return null
+
+  const parts: string[] = []
+
+  if (typeof metadata.export_format === "string") {
+    parts.push(
+      `Format: ${
+        auditExportFormatLabels[metadata.export_format] ||
+        metadata.export_format
+      }`
+    )
+  }
+
+  if (typeof metadata.rule_count === "number") {
+    parts.push(`Rules: ${metadata.rule_count}`)
+  }
+
+  if (typeof metadata.file_name === "string" && metadata.file_name) {
+    parts.push(metadata.file_name)
+  }
+
+  if (metadata.old_document_id && metadata.new_document_id) {
+    parts.push("Compared two documents")
+  }
+
+  return parts.length > 0 ? parts.join(" • ") : null
+}
+
 type RuleExportFormat = "json" | "pseudocode" | "sql" | "python"
 
 const ruleExportFormatLabels: Record<RuleExportFormat, string> = {
@@ -88,6 +142,7 @@ export default function DashboardPage() {
   const [typeFilter, setTypeFilter] = useState("All Types")
   const [statusFilter, setStatusFilter] = useState("All Statuses")
   const [comparisonsCount, setComparisonsCount] = useState(0)
+  const [auditLogs, setAuditLogs] = useState<AuditLogRow[]>([])
 
   async function fetchDocuments() {
     const { data, error } = await supabase
@@ -128,6 +183,20 @@ export default function DashboardPage() {
     }
 
     setComparisonsCount(comparisonRows?.length || 0)
+  }
+
+  async function fetchAuditLogs() {
+    const { data, error } = await supabase
+      .from("vitalex_audit_logs")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(5)
+
+    if (error) {
+      return
+    }
+
+    setAuditLogs(data || [])
   }
 
   async function fetchRules() {
@@ -286,6 +355,7 @@ export default function DashboardPage() {
     fetchDocuments()
     fetchRules()
     fetchComparisonsCount()
+    fetchAuditLogs()
   }, [])
 
   useEffect(() => {
@@ -452,6 +522,40 @@ export default function DashboardPage() {
               <p className="mt-1 text-xs text-zinc-400">{metric.label}</p>
             </div>
           ))}
+        </section>
+
+        <section className="mb-10 rounded-3xl border border-zinc-800 bg-zinc-950 p-6">
+          <h2 className="text-lg font-semibold">Recent Activity</h2>
+
+          <div className="mt-4 grid gap-3">
+            {auditLogs.map((log) => {
+              const metadataText = formatAuditMetadata(log.metadata)
+
+              return (
+                <div
+                  key={log.id}
+                  className="rounded-xl border border-zinc-800 bg-black p-4"
+                >
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <span className="text-sm font-semibold text-white">
+                      {auditActionLabels[log.action] || log.action}
+                    </span>
+                    <span className="text-xs text-zinc-500">
+                      {new Date(log.created_at).toLocaleString()}
+                    </span>
+                  </div>
+                  <p className="mt-1 text-xs text-zinc-400">
+                    {log.entity_type || "Unknown entity"}
+                    {metadataText ? ` • ${metadataText}` : ""}
+                  </p>
+                </div>
+              )
+            })}
+
+            {auditLogs.length === 0 && (
+              <p className="text-sm text-zinc-400">No recent activity yet.</p>
+            )}
+          </div>
         </section>
 
         <section className="mb-10 rounded-3xl border border-zinc-800 bg-zinc-950 p-6">
