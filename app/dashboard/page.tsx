@@ -119,10 +119,25 @@ export default function DashboardPage() {
       .select("*", { count: "exact", head: true })
 
     if (error) {
+      setComparisonsCount(0)
       return
     }
 
-    setComparisonsCount(count || 0)
+    if (typeof count === "number") {
+      setComparisonsCount(count)
+      return
+    }
+
+    const { data: comparisonRows, error: fallbackError } = await supabase
+      .from("vitalex_comparisons")
+      .select("id")
+
+    if (fallbackError) {
+      setComparisonsCount(0)
+      return
+    }
+
+    setComparisonsCount(comparisonRows?.length || 0)
   }
 
   async function fetchRules() {
