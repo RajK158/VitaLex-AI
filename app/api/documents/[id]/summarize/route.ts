@@ -35,6 +35,20 @@ async function getUserIdFromRequest(request: Request): Promise<string | null> {
   return data.user.id
 }
 
+async function getUserRole(userId: string): Promise<string> {
+  const { data, error } = await supabase
+    .from("vitalex_profiles")
+    .select("role")
+    .eq("id", userId)
+    .single()
+
+  if (error || !data) return "viewer"
+
+  return data.role || "viewer"
+}
+
+const ALLOWED_ROLES = ["admin", "analyst"]
+
 async function extractText(buffer: Buffer, fileType: string | null) {
   if (fileType === "text/plain") {
     return buffer.toString("utf-8")
@@ -66,6 +80,15 @@ export async function POST(
 
     if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
+    const role = await getUserRole(userId)
+
+    if (!ALLOWED_ROLES.includes(role)) {
+      return NextResponse.json(
+        { error: "Your role does not allow this action." },
+        { status: 403 }
+      )
     }
 
     const { data: document, error: documentError } = await supabase
