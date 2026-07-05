@@ -39,7 +39,7 @@ export function ImpactDashboard() {
             Policy Change Impact Dashboard
           </h2>
           <p className="mt-4 text-pretty text-lg leading-relaxed text-muted-foreground">
-            When policies change, VitalLex shows what changed, which teams are
+            When policies change, VitaLex shows what changed, which teams are
             affected, whether billing or coding rules need updates, and the risk
             level of each change.
           </p>

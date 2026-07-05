@@ -41,7 +41,7 @@ const columns = [
       { label: "About", href: "#use-cases" },
       { label: "Security", href: "#features" },
       { label: "Compliance", href: "#impact" },
-      { label: "Contact", href: "mailto:hello@vitallex.com" },
+      { label: "Contact", href: "mailto:hello@vitalex.com" },
     ],
   },
   {
@@ -76,8 +76,8 @@ export function SiteFooter() {
             <ul className="mt-6 space-y-3 text-sm text-muted-foreground">
               <li className="flex items-center gap-3">
                 <Mail className="size-4 text-primary" />
-                <a href="mailto:hello@vitallex.com" className="hover:text-foreground">
-                  hello@vitallex.com
+                <a href="mailto:hello@vitalex.com" className="hover:text-foreground">
+                  hello@vitalex.com
                 </a>
               </li>
               <li className="flex items-center gap-3">
@@ -117,7 +117,7 @@ export function SiteFooter() {
 
         <div className="mt-14 flex flex-col items-center justify-between gap-6 border-t border-border pt-8 sm:flex-row">
           <p className="text-sm text-muted-foreground">
-            &copy; {new Date().getFullYear()} VitalLex, Inc. All rights reserved.
+            &copy; {new Date().getFullYear()} VitaLex, Inc. All rights reserved.
           </p>
           <div className="flex items-center gap-2">
             {socials.map((social) => {

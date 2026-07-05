@@ -39,7 +39,7 @@ export function Logo({
           textClassName,
         )}
       >
-        VitalLex
+        VitaLex
       </span>
     </span>
   )

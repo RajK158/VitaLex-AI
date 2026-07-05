@@ -47,7 +47,7 @@ export function Hero() {
           </h1>
 
           <p className="mt-6 text-pretty text-lg leading-relaxed text-primary-foreground/80">
-            VitalLex helps healthcare teams manage billing policies, coding
+            VitaLex helps healthcare teams manage billing policies, coding
             rules, clinical guidelines, and payer-provider contracts in one
             secure workspace — powered by AI summaries, change comparison, and
             rule generation.

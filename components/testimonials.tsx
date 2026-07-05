@@ -10,7 +10,7 @@ const stats = [
 const testimonials = [
   {
     quote:
-      "VitalLex helped our team understand policy changes without manually reading every document line by line.",
+      "VitaLex helped our team understand policy changes without manually reading every document line by line.",
     name: "Maya Patel",
     role: "Billing Compliance Manager",
     initials: "MP",
