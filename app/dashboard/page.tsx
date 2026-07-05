@@ -165,6 +165,21 @@ function getRolePermissions(role: string | null | undefined): RolePermissions {
   return ROLE_PERMISSIONS[role || "viewer"] || ROLE_PERMISSIONS.viewer
 }
 
+const inputClassName =
+  "w-full rounded-xl border border-zinc-800/80 bg-black/60 px-4 py-3 text-sm text-zinc-200 transition placeholder:text-zinc-600 hover:border-zinc-700 focus:border-zinc-600 focus:outline-none focus:ring-1 focus:ring-zinc-700/50"
+
+const sectionCardClassName =
+  "rounded-2xl border border-zinc-800/80 bg-zinc-950/90 shadow-sm shadow-black/20"
+
+const primaryButtonClassName =
+  "rounded-full bg-white px-4 py-2 text-xs font-semibold text-black transition hover:bg-zinc-200 disabled:opacity-50"
+
+const secondaryButtonClassName =
+  "rounded-full border border-zinc-700/80 bg-zinc-950 px-4 py-2 text-xs font-semibold text-zinc-200 transition hover:border-zinc-600 hover:bg-zinc-900 disabled:opacity-50"
+
+const headerButtonClassName =
+  "rounded-full border border-zinc-800 bg-zinc-950/80 px-4 py-2 text-xs font-semibold text-zinc-300 transition hover:border-zinc-700 hover:bg-zinc-900"
+
 function formatAuditMetadata(metadata: Record<string, unknown> | null) {
   if (!metadata) return null
 
@@ -758,79 +773,118 @@ export default function DashboardPage() {
   if (!authChecked) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-black text-white">
-        <p className="text-zinc-400">Checking authentication...</p>
+        <div className="text-center">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">
+            Vitalex
+          </p>
+          <p className="mt-3 text-sm text-zinc-400">Checking authentication...</p>
+        </div>
       </main>
     )
   }
 
   return (
-    <main className="min-h-screen bg-black px-6 py-10 text-white">
-      <div className="mx-auto max-w-6xl">
-        <div className="mb-10">
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <p className="text-sm font-medium uppercase tracking-wider text-zinc-400">
-              VitaLex Dashboard
+    <main className="relative min-h-screen bg-black text-white">
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-x-0 top-0 h-72 opacity-[0.08]"
+        style={{
+          backgroundImage:
+            "linear-gradient(to right, rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.5) 1px, transparent 1px)",
+          backgroundSize: "44px 44px",
+          maskImage:
+            "radial-gradient(ellipse 70% 60% at 50% 0%, black 20%, transparent 80%)",
+        }}
+      />
+
+      <header className="sticky top-0 z-40 border-b border-zinc-900/80 bg-black/80 backdrop-blur-md">
+        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-6 py-4 sm:px-8 lg:px-10">
+          <div className="min-w-0">
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">
+              Vitalex Dashboard
             </p>
-            <div className="flex items-center gap-2">
-              {profile && (
-                <span className="rounded-full border border-zinc-800 px-4 py-2 text-xs font-semibold text-zinc-300">
-                  Role: {roleLabels[profile.role] || profile.role}
-                </span>
-              )}
-              {permissions.canCompare && (
-                <Link
-                  href="/dashboard/compare"
-                  className="rounded-full border border-zinc-700 px-4 py-2 text-xs font-semibold text-zinc-200 transition hover:bg-zinc-800"
-                >
-                  Compare Documents
-                </Link>
-              )}
-              <button
-                onClick={handleLogout}
-                className="rounded-full border border-zinc-800 px-4 py-2 text-xs font-semibold text-zinc-300 transition hover:bg-zinc-800"
-              >
-                Logout
-              </button>
-            </div>
+            <p className="mt-1 text-sm text-zinc-400">
+              Healthcare policy intelligence workspace
+            </p>
           </div>
-          <h1 className="mt-3 text-4xl font-bold tracking-tight">
+
+          <div className="flex flex-wrap items-center gap-2">
+            {profile && (
+              <span className="rounded-full border border-zinc-800 bg-zinc-950/80 px-4 py-2 text-xs font-semibold text-zinc-300">
+                Role: {roleLabels[profile.role] || profile.role}
+              </span>
+            )}
+            {permissions.canCompare && (
+              <Link
+                href="/dashboard/compare"
+                className={headerButtonClassName}
+              >
+                Compare Documents
+              </Link>
+            )}
+            <button onClick={handleLogout} className={headerButtonClassName}>
+              Logout
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <div className="relative mx-auto max-w-6xl px-6 py-10 sm:px-8 lg:px-10">
+        <div className="mb-10">
+          <h1 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
             Upload healthcare policy documents
           </h1>
-          <p className="mt-3 max-w-2xl text-zinc-400">
+          <p className="mt-3 max-w-2xl text-sm leading-6 text-zinc-400">
             Upload billing policies, coding rules, payer contracts, clinical
             guidelines, and other healthcare documents for summarization and
             rule generation.
           </p>
         </div>
 
-        <section className="mb-10 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-          {dashboardMetrics.map((metric) => (
-            <div
-              key={metric.label}
-              className="rounded-2xl border border-zinc-800 bg-zinc-950 p-4"
-            >
-              <p className="text-2xl font-bold tracking-tight text-white">
-                {metric.value}
-              </p>
-              <p className="mt-1 text-xs text-zinc-400">{metric.label}</p>
-            </div>
-          ))}
+        <section className="mb-10">
+          <div className="mb-4">
+            <h2 className="text-sm font-semibold uppercase tracking-[0.16em] text-zinc-500">
+              Impact overview
+            </h2>
+          </div>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+            {dashboardMetrics.map((metric) => (
+              <div
+                key={metric.label}
+                className={`${sectionCardClassName} p-5 transition hover:border-zinc-700/80`}
+              >
+                <p className="text-[11px] font-medium uppercase tracking-wide text-zinc-500">
+                  {metric.label}
+                </p>
+                <p className="mt-3 text-3xl font-bold tracking-tight text-white">
+                  {metric.value}
+                </p>
+              </div>
+            ))}
+          </div>
         </section>
 
-        <section className="mb-10 rounded-3xl border border-zinc-800 bg-zinc-950 p-6">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <h2 className="text-lg font-semibold">Recent Activity</h2>
+        <section className={`mb-10 ${sectionCardClassName} p-6 sm:p-7`}>
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <h2 className="text-lg font-semibold text-white">
+                Recent Activity
+              </h2>
+              <p className="mt-1 text-sm text-zinc-500">
+                Latest actions across your workspace
+              </p>
+            </div>
             {auditLogs.length > RECENT_ACTIVITY_PREVIEW_COUNT && (
               <button
                 onClick={() => setShowAllActivity((prev) => !prev)}
-                className="rounded-full border border-zinc-700 px-3 py-1 text-xs font-semibold text-zinc-200 transition hover:bg-zinc-800"
+                className={secondaryButtonClassName}
               >
                 {showAllActivity ? "Show less" : "View all activity"}
               </button>
             )}
           </div>
 
-          <div className="mt-4 grid gap-3">
+          <div className="mt-6 grid gap-3">
             {(showAllActivity
               ? auditLogs
               : auditLogs.slice(0, RECENT_ACTIVITY_PREVIEW_COUNT)
@@ -840,7 +894,11 @@ export default function DashboardPage() {
               return (
                 <div
                   key={log.id}
-                  className="rounded-xl border border-zinc-800 bg-black p-4"
+                  className="rounded-xl border border-zinc-800/80 bg-black/40 p-4 pl-5 transition hover:border-zinc-700/80"
+                  style={{
+                    borderLeftWidth: "3px",
+                    borderLeftColor: "rgb(244 244 245 / 0.15)",
+                  }}
                 >
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <span className="text-sm font-semibold text-white">
@@ -850,7 +908,7 @@ export default function DashboardPage() {
                       {new Date(log.created_at).toLocaleString()}
                     </span>
                   </div>
-                  <p className="mt-1 text-xs text-zinc-400">
+                  <p className="mt-1.5 text-xs leading-5 text-zinc-400">
                     {log.entity_type || "Unknown entity"}
                     {metadataText ? ` • ${metadataText}` : ""}
                   </p>
@@ -859,35 +917,46 @@ export default function DashboardPage() {
             })}
 
             {auditLogs.length === 0 && (
-              <p className="text-sm text-zinc-400">No recent activity yet.</p>
+              <div className="rounded-xl border border-dashed border-zinc-800 bg-black/30 px-4 py-8 text-center">
+                <p className="text-sm text-zinc-500">No recent activity yet.</p>
+              </div>
             )}
           </div>
         </section>
 
-        <section className="mb-10 rounded-3xl border border-zinc-800 bg-zinc-950 p-6">
+        <section className={`mb-10 ${sectionCardClassName} p-6 sm:p-7`}>
+          <div className="mb-6">
+            <h2 className="text-lg font-semibold text-white">
+              Upload Document
+            </h2>
+            <p className="mt-1 text-sm text-zinc-500">
+              PDF, DOCX, and TXT files supported
+            </p>
+          </div>
+
           {permissions.canUpload ? (
             <>
-              <div className="grid gap-4 md:grid-cols-2">
+              <div className="grid gap-5 md:grid-cols-2">
                 <div>
-                  <label className="mb-2 block text-sm text-zinc-300">
+                  <label className="mb-2 block text-xs font-medium uppercase tracking-wide text-zinc-500">
                     Document file
                   </label>
                   <input
                     type="file"
                     accept=".pdf,.docx,.txt"
                     onChange={(e) => setFile(e.target.files?.[0] || null)}
-                    className="w-full rounded-xl border border-zinc-800 bg-black p-3 text-sm text-zinc-300"
+                    className={`${inputClassName} file:mr-3 file:rounded-full file:border-0 file:bg-zinc-800 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-zinc-200`}
                   />
                 </div>
 
                 <div>
-                  <label className="mb-2 block text-sm text-zinc-300">
+                  <label className="mb-2 block text-xs font-medium uppercase tracking-wide text-zinc-500">
                     Document type
                   </label>
                   <select
                     value={documentType}
                     onChange={(e) => setDocumentType(e.target.value)}
-                    className="w-full rounded-xl border border-zinc-800 bg-black p-3 text-sm text-zinc-300"
+                    className={inputClassName}
                   >
                     <option>Billing Policy</option>
                     <option>Coding Rule</option>
@@ -898,26 +967,26 @@ export default function DashboardPage() {
                 </div>
 
                 <div>
-                  <label className="mb-2 block text-sm text-zinc-300">
+                  <label className="mb-2 block text-xs font-medium uppercase tracking-wide text-zinc-500">
                     Payer
                   </label>
                   <input
                     value={payer}
                     onChange={(e) => setPayer(e.target.value)}
                     placeholder="Example: CMS, Aetna, UnitedHealthcare"
-                    className="w-full rounded-xl border border-zinc-800 bg-black p-3 text-sm text-zinc-300"
+                    className={inputClassName}
                   />
                 </div>
 
                 <div>
-                  <label className="mb-2 block text-sm text-zinc-300">
+                  <label className="mb-2 block text-xs font-medium uppercase tracking-wide text-zinc-500">
                     Department
                   </label>
                   <input
                     value={department}
                     onChange={(e) => setDepartment(e.target.value)}
                     placeholder="Example: Billing, Compliance, Clinical Ops"
-                    className="w-full rounded-xl border border-zinc-800 bg-black p-3 text-sm text-zinc-300"
+                    className={inputClassName}
                   />
                 </div>
               </div>
@@ -931,49 +1000,64 @@ export default function DashboardPage() {
               </button>
             </>
           ) : (
-            <p className="text-sm text-zinc-400">
-              Your role does not allow document uploads.
-            </p>
+            <div className="rounded-xl border border-dashed border-zinc-800 bg-black/30 px-4 py-6">
+              <p className="text-sm text-zinc-400">
+                Your role does not allow document uploads.
+              </p>
+            </div>
           )}
 
           {message && (
-            <p className="mt-4 text-sm text-zinc-300">
+            <p className="mt-4 rounded-xl border border-zinc-800/80 bg-black/40 px-4 py-3 text-sm text-zinc-300">
               {message}
             </p>
           )}
         </section>
 
         <section>
-          <div className="mb-4 flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between">
-            <h2 className="text-2xl font-semibold">
-              Uploaded documents
-            </h2>
-            <p className="text-sm text-zinc-400">
+          <div className="mb-5 flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <h2 className="text-2xl font-semibold text-white">
+                Uploaded documents
+              </h2>
+              <p className="mt-1 text-sm text-zinc-500">
+                Manage summaries, rules, and approvals
+              </p>
+            </div>
+            <p className="text-sm text-zinc-500">
               Showing {filteredDocuments.length} of {documents.length} documents
             </p>
           </div>
 
-          <div className="mb-6 grid gap-3 rounded-2xl border border-zinc-800 bg-zinc-950 p-4 md:grid-cols-5">
+          <div
+            className={`mb-6 ${sectionCardClassName} grid gap-4 p-5 md:grid-cols-5`}
+          >
+            <div className="md:col-span-5">
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-zinc-500">
+                Search &amp; filters
+              </p>
+            </div>
+
             <div className="md:col-span-2">
-              <label className="mb-2 block text-sm text-zinc-300">
+              <label className="mb-2 block text-xs font-medium uppercase tracking-wide text-zinc-500">
                 Search
               </label>
               <input
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search by file name, payer, or department"
-                className="w-full rounded-xl border border-zinc-800 bg-black p-3 text-sm text-zinc-300"
+                className={inputClassName}
               />
             </div>
 
             <div>
-              <label className="mb-2 block text-sm text-zinc-300">
+              <label className="mb-2 block text-xs font-medium uppercase tracking-wide text-zinc-500">
                 Document type
               </label>
               <select
                 value={typeFilter}
                 onChange={(e) => setTypeFilter(e.target.value)}
-                className="w-full rounded-xl border border-zinc-800 bg-black p-3 text-sm text-zinc-300"
+                className={inputClassName}
               >
                 <option>All Types</option>
                 <option>Billing Policy</option>
@@ -985,13 +1069,13 @@ export default function DashboardPage() {
             </div>
 
             <div>
-              <label className="mb-2 block text-sm text-zinc-300">
+              <label className="mb-2 block text-xs font-medium uppercase tracking-wide text-zinc-500">
                 Status
               </label>
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="w-full rounded-xl border border-zinc-800 bg-black p-3 text-sm text-zinc-300"
+                className={inputClassName}
               >
                 <option>All Statuses</option>
                 <option value="uploaded">uploaded</option>
@@ -1002,13 +1086,13 @@ export default function DashboardPage() {
             </div>
 
             <div>
-              <label className="mb-2 block text-sm text-zinc-300">
+              <label className="mb-2 block text-xs font-medium uppercase tracking-wide text-zinc-500">
                 Approval status
               </label>
               <select
                 value={approvalFilter}
                 onChange={(e) => setApprovalFilter(e.target.value)}
-                className="w-full rounded-xl border border-zinc-800 bg-black p-3 text-sm text-zinc-300"
+                className={inputClassName}
               >
                 <option>All Approval Statuses</option>
                 <option value="draft">Draft</option>
@@ -1020,7 +1104,7 @@ export default function DashboardPage() {
 
             <button
               onClick={clearFilters}
-              className="rounded-xl border border-zinc-800 px-4 py-3 text-sm font-semibold text-zinc-300 transition hover:bg-zinc-800 md:col-span-5 md:w-fit"
+              className={`${secondaryButtonClassName} md:col-span-5 md:w-fit`}
             >
               Clear Filters
             </button>
@@ -1030,12 +1114,12 @@ export default function DashboardPage() {
             {filteredDocuments.map((doc) => (
               <div
                 key={doc.id}
-                className="rounded-2xl border border-zinc-800 bg-zinc-950 p-5"
+                className={`${sectionCardClassName} p-5 transition hover:border-zinc-700/80 sm:p-6`}
               >
-                <div className="flex flex-col justify-between gap-3 md:flex-row md:items-center">
-                  <div>
+                <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+                  <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
-                      <h3 className="font-semibold">
+                      <h3 className="truncate text-base font-semibold text-white">
                         {doc.file_name}
                       </h3>
                       <span
@@ -1049,27 +1133,35 @@ export default function DashboardPage() {
                           doc.approval_status || "draft"
                         ] || "Draft"}
                       </span>
+                      {doc.status !== "summarized" && (
+                        <span className="rounded-full bg-zinc-800/80 px-3 py-1 text-xs capitalize text-zinc-300">
+                          {doc.status}
+                        </span>
+                      )}
                     </div>
-                    <p className="mt-1 text-sm text-zinc-400">
+                    <p className="mt-2 text-sm text-zinc-400">
                       {doc.document_type || "Unknown type"} •{" "}
                       {doc.payer || "No payer"} •{" "}
                       {doc.department || "No department"}
                     </p>
+                    <p className="mt-1 text-xs text-zinc-500">
+                      Uploaded {new Date(doc.created_at).toLocaleString()}
+                    </p>
                   </div>
 
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2 lg:max-w-xl lg:justify-end">
                     {doc.status === "summarized" ? (
                       <>
                         <button
                           onClick={() => setSummaryDoc(doc)}
-                          className="rounded-full bg-white px-4 py-2 text-xs font-semibold text-black transition hover:bg-zinc-200"
+                          className={primaryButtonClassName}
                         >
                           View Summary
                         </button>
                         {rulesByDocument[doc.id]?.length ? (
                           <button
                             onClick={() => viewRules(doc)}
-                            className="rounded-full bg-white px-4 py-2 text-xs font-semibold text-black transition hover:bg-zinc-200"
+                            className={primaryButtonClassName}
                           >
                             View Rules
                           </button>
@@ -1077,7 +1169,7 @@ export default function DashboardPage() {
                           <button
                             onClick={() => generateRules(doc)}
                             disabled={loading}
-                            className="rounded-full border border-zinc-700 px-4 py-2 text-xs font-semibold text-zinc-200 transition hover:bg-zinc-800 disabled:opacity-50"
+                            className={secondaryButtonClassName}
                           >
                             Generate Rules
                           </button>
@@ -1091,7 +1183,7 @@ export default function DashboardPage() {
                       <button
                         onClick={() => generateSummary(doc.id)}
                         disabled={loading}
-                        className="rounded-full bg-white px-4 py-2 text-xs font-semibold text-black transition hover:bg-zinc-200 disabled:opacity-50"
+                        className={primaryButtonClassName}
                       >
                         Generate Summary
                       </button>
@@ -1101,15 +1193,9 @@ export default function DashboardPage() {
                       </span>
                     )}
 
-                    {doc.status !== "summarized" && (
-                      <span className="w-fit rounded-full bg-zinc-800 px-3 py-1 text-xs text-zinc-300">
-                          {doc.status}
-                      </span>
-                    )}
-
                     <Link
                       href={`/dashboard/documents/${doc.id}`}
-                      className="rounded-full border border-zinc-700 px-4 py-2 text-xs font-semibold text-zinc-200 transition hover:bg-zinc-800"
+                      className={secondaryButtonClassName}
                     >
                       Open
                     </Link>
@@ -1118,26 +1204,30 @@ export default function DashboardPage() {
                       <button
                         onClick={() => deleteDocument(doc)}
                         disabled={loading}
-                        className="rounded-full border border-zinc-800 px-4 py-2 text-xs font-semibold text-zinc-300 transition hover:border-red-500/50 hover:text-red-400 disabled:opacity-50"
+                        className="rounded-full border border-zinc-800 px-4 py-2 text-xs font-semibold text-zinc-300 transition hover:border-red-500/50 hover:bg-red-950/20 hover:text-red-400 disabled:opacity-50"
                       >
                         Delete
                       </button>
                     )}
-                    </div>
+                  </div>
                 </div>
               </div>
             ))}
 
             {documents.length === 0 && (
-              <p className="text-zinc-400">
-                No documents uploaded yet.
-              </p>
+              <div className="rounded-2xl border border-dashed border-zinc-800 bg-zinc-950/50 px-6 py-12 text-center">
+                <p className="text-sm text-zinc-400">
+                  No documents uploaded yet.
+                </p>
+              </div>
             )}
 
             {documents.length > 0 && filteredDocuments.length === 0 && (
-              <p className="text-zinc-400">
-                No documents found. Try changing your search or filters.
-              </p>
+              <div className="rounded-2xl border border-dashed border-zinc-800 bg-zinc-950/50 px-6 py-12 text-center">
+                <p className="text-sm text-zinc-400">
+                  No documents found. Try changing your search or filters.
+                </p>
+              </div>
             )}
           </div>
         </section>
@@ -1145,16 +1235,19 @@ export default function DashboardPage() {
 
       {summaryDoc && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm"
           onClick={() => setSummaryDoc(null)}
         >
           <div
-            className="max-h-[80vh] w-full max-w-2xl overflow-y-auto rounded-2xl border border-zinc-800 bg-zinc-950 p-6"
+            className={`max-h-[80vh] w-full max-w-2xl overflow-y-auto ${sectionCardClassName} p-6 sm:p-7`}
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-start justify-between gap-4">
               <div className="min-w-0">
-                <h3 className="break-words font-semibold text-white">
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-zinc-500">
+                  Summary
+                </p>
+                <h3 className="mt-1 break-words text-lg font-semibold text-white">
                   {summaryDoc.file_name}
                 </h3>
                 <p className="mt-1 text-sm text-zinc-400">
@@ -1166,13 +1259,13 @@ export default function DashboardPage() {
               <button
                 onClick={() => setSummaryDoc(null)}
                 aria-label="Close summary"
-                className="shrink-0 rounded-full border border-zinc-800 p-2 text-zinc-300 transition hover:bg-zinc-800"
+                className="shrink-0 rounded-full border border-zinc-800 p-2 text-zinc-300 transition hover:border-zinc-700 hover:bg-zinc-900"
               >
                 <X className="size-4" />
               </button>
             </div>
 
-            <div className="mt-5 rounded-xl border border-zinc-800 bg-black p-4">
+            <div className="mt-5 rounded-xl border border-zinc-800/80 bg-black/50 p-4">
               <p className="whitespace-pre-line text-sm leading-6 text-zinc-300">
                 {summaryDoc.summary}
               </p>
@@ -1183,18 +1276,21 @@ export default function DashboardPage() {
 
       {rulesDoc && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm"
           onClick={() => setRulesDoc(null)}
         >
           <div
-            className="max-h-[80vh] w-full max-w-4xl overflow-y-auto overflow-x-hidden rounded-2xl border border-zinc-800 bg-zinc-950 p-6"
+            className={`max-h-[80vh] w-full max-w-4xl overflow-y-auto overflow-x-hidden ${sectionCardClassName} p-6 sm:p-7`}
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex flex-col gap-4">
               <div className="flex items-start justify-between gap-4">
                 <div className="min-w-0">
-                  <h3 className="break-words font-semibold text-white">
-                    Generated Rules — {rulesDoc.file_name}
+                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-zinc-500">
+                    Generated Rules
+                  </p>
+                  <h3 className="mt-1 break-words text-lg font-semibold text-white">
+                    {rulesDoc.file_name}
                   </h3>
                   <p className="mt-1 text-sm text-zinc-400">
                     {rulesDoc.document_type || "Unknown type"} •{" "}
@@ -1205,7 +1301,7 @@ export default function DashboardPage() {
                 <button
                   onClick={() => setRulesDoc(null)}
                   aria-label="Close rules"
-                  className="shrink-0 rounded-full border border-zinc-800 p-2 text-zinc-300 transition hover:bg-zinc-800"
+                  className="shrink-0 rounded-full border border-zinc-800 p-2 text-zinc-300 transition hover:border-zinc-700 hover:bg-zinc-900"
                 >
                   <X className="size-4" />
                 </button>
@@ -1222,7 +1318,7 @@ export default function DashboardPage() {
                   <button
                     onClick={() => exportRulesInFormat(rulesDoc, "json")}
                     disabled={exportingFormat !== null}
-                    className="rounded-full border border-zinc-700 px-3 py-1 text-sm text-zinc-200 transition hover:bg-zinc-800 disabled:opacity-50"
+                    className={secondaryButtonClassName}
                   >
                     {exportingFormat === "json"
                       ? "Exporting..."
@@ -1233,7 +1329,7 @@ export default function DashboardPage() {
                       exportRulesInFormat(rulesDoc, "pseudocode")
                     }
                     disabled={exportingFormat !== null}
-                    className="rounded-full border border-zinc-700 px-3 py-1 text-sm text-zinc-200 transition hover:bg-zinc-800 disabled:opacity-50"
+                    className={secondaryButtonClassName}
                   >
                     {exportingFormat === "pseudocode"
                       ? "Exporting..."
@@ -1242,7 +1338,7 @@ export default function DashboardPage() {
                   <button
                     onClick={() => exportRulesInFormat(rulesDoc, "sql")}
                     disabled={exportingFormat !== null}
-                    className="rounded-full border border-zinc-700 px-3 py-1 text-sm text-zinc-200 transition hover:bg-zinc-800 disabled:opacity-50"
+                    className={secondaryButtonClassName}
                   >
                     {exportingFormat === "sql"
                       ? "Exporting..."
@@ -1251,7 +1347,7 @@ export default function DashboardPage() {
                   <button
                     onClick={() => exportRulesInFormat(rulesDoc, "python")}
                     disabled={exportingFormat !== null}
-                    className="rounded-full border border-zinc-700 px-3 py-1 text-sm text-zinc-200 transition hover:bg-zinc-800 disabled:opacity-50"
+                    className={secondaryButtonClassName}
                   >
                     {exportingFormat === "python"
                       ? "Exporting..."
@@ -1265,7 +1361,7 @@ export default function DashboardPage() {
               {rules.map((rule, index) => (
                 <div
                   key={`${rule.rule_id}-${index}`}
-                  className="rounded-xl border border-zinc-800 bg-black p-4"
+                  className="rounded-xl border border-zinc-800/80 bg-black/50 p-4"
                 >
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <span className="text-sm font-semibold text-white">
