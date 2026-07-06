@@ -1,4 +1,11 @@
-# Vitalex
+# VitaLex
+
+## Final Deliverables
+
+- Written Report: `Raj_Kundur_VitaLex_Report.docx`
+- Slide Presentation: `Raj_Kundur_VitaLex_Presentation.pptx`
+- Demo Video: `Raj_Kundur_VitaLex_Demo.mp4`
+- Live Demo: https://vitalex.vercel.app
 
 Vitalex is a healthcare content management and policy intelligence MVP. It helps healthcare operations teams upload policy documents, generate AI summaries and structured rules, compare document versions, export rules for downstream systems, and track approval and audit activity.
 
